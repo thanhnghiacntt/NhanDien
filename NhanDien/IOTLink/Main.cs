@@ -8,7 +8,7 @@ namespace NhanDien.IOTLink
     {
         public static void Process()
         {
-            var myBitmap = GetBitmapColorMatrix(@"D:\MyProject\C#\NhanDien\NhanDien\NhanDien\test\839513,476850,20.png");
+            var myBitmap = Utils.GetColorsImage(@"D:\MyProject\C#\NhanDien\NhanDien\NhanDien\test\839513,476850,20.png");
             int count = 0;
             for (int i = 0; i < myBitmap.Length; i++)
             {
@@ -25,22 +25,5 @@ namespace NhanDien.IOTLink
             var temp = new SupportVectorMachine(2);
         }
 
-        public static Color[][] GetBitmapColorMatrix(string filePath)
-        {
-            Bitmap bmp = new Bitmap(filePath);
-            Color[][] matrix;
-            int height = bmp.Height;
-            int width = bmp.Width;
-            matrix = new Color[bmp.Width][];
-            for (int i = 0; i <= bmp.Width - 1; i++)
-            {
-                matrix[i] = new Color[bmp.Height];
-                for (int j = 0; j < bmp.Height - 1; j++)
-                {
-                    matrix[i][j] = bmp.GetPixel(i, j);
-                }
-            }
-            return matrix;
-        }
     }
 }
