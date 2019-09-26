@@ -1,5 +1,6 @@
-﻿using System.Drawing;
-using Accord.Math;
+﻿using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
 
 namespace NhanDien.IOTLink
 {
@@ -17,6 +18,76 @@ namespace NhanDien.IOTLink
         {
             Bitmap bmp = new Bitmap(filePath);
             return BitmapToColors(bmp);
+        }
+
+        /// <summary>
+        /// Save bitmap
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <param name="colors"></param>
+        public static void SaveColorImage(string filePath, Color[,] colors)
+        {
+            var bit = ColorToBitmap(colors);
+            bit.Save(filePath);
+        }
+
+        /// <summary>
+        /// Save bitmap
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <param name="colors"></param>
+        public static void SaveColorText(string filePath, Color[,] colors)
+        {
+            var list = new List<string>();
+            var w = colors.GetLength(0);
+            var h = colors.GetLength(1);
+            for (int i = 0; i < w; i++)
+            {
+                var str = "";
+                for (int j = 0; j < h; j++)
+                {
+                    var c = colors[i, j];
+                    if (c.A == 255 && c.B == 0 && c.G == 0 && c.R == 0)
+                    {
+                        str += "-";
+                    }
+                    else
+                    {
+                        str += "+";
+                    }
+                }
+                list.Add(str);
+            }
+            File.WriteAllLines(filePath, list);
+        }
+
+        /// <summary>
+        /// Save bitmap
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <param name="images"></param>
+        public static void SaveColorText(string filePath, bool[,] images)
+        {
+            var list = new List<string>();
+            var w = images.GetLength(0);
+            var h = images.GetLength(1);
+            for (int i = 0; i < w; i++)
+            {
+                var str = "";
+                for (int j = 0; j < h; j++)
+                {
+                    if (images[i, j])
+                    {
+                        str += "+";
+                    }
+                    else
+                    {
+                        str += "-";
+                    }
+                }
+                list.Add(str);
+            }
+            File.WriteAllLines(filePath, list);
         }
 
         /// <summary>
@@ -40,6 +111,26 @@ namespace NhanDien.IOTLink
         }
 
         /// <summary>
+        /// Color to bitmap
+        /// </summary>
+        /// <param name="colors"></param>
+        /// <returns></returns>
+        public static Bitmap ColorToBitmap(Color[,] colors)
+        {
+            int height = colors.GetLength(0);
+            int width = colors.GetLength(1);
+            Bitmap bit = new Bitmap(width, height);
+            for (int i = 0; i < width; i++)
+            {
+                for (int j = 0; j < height; j++)
+                {
+                    bit.SetPixel(i, j, colors[i, j]);
+                }
+            }
+            return bit;
+        }
+
+        /// <summary>
         /// Create array two dim
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -60,27 +151,29 @@ namespace NhanDien.IOTLink
         /// Làm mờ bằng matrix 3x3
         /// </summary>
         /// <param name="a"></param>
-        /// <param name="matrix3x3"></param>
+        /// <param name="matrix"></param>
         /// <returns></returns>
-        public static double[,] LamMo(double[,] a, double[,] matrix3x3)
+        public static double[,] LamMo(double[,] a, double[,] matrix)
         {
-            var rs = new double[a.GetLength(0), a.GetLength(1)];
-            var w = matrix3x3.GetLength(0) / 2;
-            var h = matrix3x3.GetLength(1) / 2;
-            for (int i = 0; i < a.GetLength(0); i++)
+            var width = a.GetLength(0);
+            var height = a.GetLength(1);
+            var rs = new double[width, height];
+            var w = matrix.GetLength(0) / 2;
+            var h = height / 2;
+            for (int i = 0; i < width; i++)
             {
-                for (int j = 0; j < a.GetLength(1); j++)
+                for (int j = 0; j < height; j++)
                 {
-                    if (i < w || i >= a.GetLength(0) - w || j < h || j >= a.GetLength(1) - h)
+                    if (i < w || i >= width - w || j < h || j >= height - h)
                     {
                         rs[i, j] = a[i, j];
                     }
                     else
                     {
                         var temp = 0.0;
-                        for (int l = 0; l < matrix3x3.GetLength(0); l++)
+                        for (int l = 0; l < width; l++)
                         {
-                            for (int k = 0; k < matrix3x3.GetLength(1); k++)
+                            for (int k = 0; k < height; k++)
                             {
                                 temp += a[i + l, j + k];
                             }
@@ -92,37 +185,98 @@ namespace NhanDien.IOTLink
             return rs;
         }
 
-
         /// <summary>
         /// Làm mờ bằng matrix 3x3
         /// </summary>
         /// <param name="a"></param>
-        /// <param name="matrix4x4"></param>
+        /// <param name="matrix"></param>
         /// <returns></returns>
-        public static double[,] LamMo4x4(double[,] a, double[,] matrix4x4)
+        public static Color[,] LamMo(Color[,] a, int[,] matrix)
         {
-            var rs = new double[a.GetLength(0), a.GetLength(1)];
-            var w = matrix4x4.GetLength(0) / 2;
-            var h = matrix4x4.GetLength(1) / 2;
-            for (int i = 0; i < a.GetLength(0); i++)
+            var width = a.GetLength(0);
+            var height = a.GetLength(1);
+            var rs = new Color[width, height];
+            var w = matrix.GetLength(0) / 2;
+            var h = matrix.GetLength(1) / 2;
+            var sum = 0.0;
+            var wMatrix = matrix.GetLength(0);
+            var hMatrix = matrix.GetLength(1);
+            for (int l = 0; l < wMatrix; l++)
             {
-                for (int j = 0; j < a.GetLength(1); j++)
+                for (int k = 0; k < hMatrix; k++)
                 {
-                    if (i < w || i > a.GetLength(0) - w || j < h || j > a.GetLength(1) - h)
+                    sum += matrix[l,k];
+                }
+            }
+            for (int i = 0; i < width; i++)
+            {
+                for (int j = 0; j < height; j++)
+                {
+                    if (i < w || i >= width - w - 1 || j < h || j >= height - h - 1)
                     {
                         rs[i, j] = a[i, j];
                     }
                     else
                     {
-                        var temp = 0.0;
-                        for (int l = 0; l < matrix4x4.GetLength(0); l++)
+                        var temp = new double[] { 0.0, 0.0, 0.0, 0.0 };
+                        var avg = new int[] { 0, 0, 0, 0 };
+                        for (int l = 0; l < wMatrix; l++)
                         {
-                            for (int k = 0; k < matrix4x4.GetLength(1); k++)
+                            for (int k = 0; k < hMatrix; k++)
                             {
-                                temp += a[i + l, j + k];
+                                temp[0] += a[i + l, j + k].A * matrix[l, k];
+                                temp[1] += a[i + l, j + k].R * matrix[l, k];
+                                temp[2] += a[i + l, j + k].G * matrix[l, k];
+                                temp[3] += a[i + l, j + k].B * matrix[l, k];
                             }
                         }
-                        rs[i, j] = temp;
+                        if (sum != 0)
+                        {
+                            for (int l = 0; l < temp.Length; l++)
+                            {
+                                avg[l] = (int)(temp[l] / sum);
+                            }
+                        }
+                        rs[i, j] = Color.FromArgb(avg[0], avg[1], avg[2], avg[3]);
+                    }
+                }
+            }
+            return rs;
+        }
+
+        /// <summary>
+        /// Giao hai ma trận
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="matrix"></param>
+        /// <returns></returns>
+        public static bool[,] Giao(bool[,] a, bool[,] matrix)
+        {
+            var width = a.GetLength(0);
+            var height = a.GetLength(1);
+            var rs = new bool[width, height];
+            var w = matrix.GetLength(0) / 2;
+            var h = matrix.GetLength(1) / 2;
+            var wMatrix = matrix.GetLength(0);
+            var hMatrix = matrix.GetLength(1);
+
+            for (int i = 0; i < width; i++)
+            {
+                for (int j = 0; j < height; j++)
+                {
+                    if (i < w || i >= width - w - 1 || j < h || j >= height - h - 1)
+                    {
+                        rs[i, j] = a[i, j];
+                    }
+                    else
+                    {
+                        for (int l = 0; l < wMatrix; l++)
+                        {
+                            for (int k = 0; k < hMatrix; k++)
+                            {
+                                rs[i, j] = a[i, j] & matrix[l,k];
+                            }
+                        }
                     }
                 }
             }

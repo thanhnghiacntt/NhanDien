@@ -1,6 +1,7 @@
 ﻿using Accord.MachineLearning.VectorMachines;
-using System;
+using NhanDien.IOTLink.Process;
 using System.Drawing;
+
 
 namespace NhanDien.IOTLink
 {
@@ -8,22 +9,42 @@ namespace NhanDien.IOTLink
     {
         public static void Process()
         {
-            var myBitmap = Utils.GetColorsImage(@"D:\MyProject\C#\NhanDien\NhanDien\NhanDien\test\839513,476850,20.png");
+            string startupPath = @"D:\MyProject\C#\NhanDien\NhanDien\";
+            //var path = startupPath + @"test\839572,476863,20.png";
+            var path = startupPath + @"test\20,839453,476850.png";
+            var a = Utils.GetColorsImage(path);
+            
             int count = 0;
-            for (int i = 0; i < myBitmap.Length; i++)
+            for (int i = 0; i < a.GetLength(0); i++)
             {
-                for (int j = 0; j < myBitmap[i].Length; j++)
+                for (int j = 0; j < a.GetLength(1); j++)
                 {
-                    var color = myBitmap[i][j];
-                    if (color.A == 255 && color.B == 255 && color.G == 255)
+                    var color = a[i,j];
+                    if (color.A == 255 && color.B == 255 && color.G == 255 && color.R == 255)
                     {
                         count++;
                     }
+                    else
+                    {
+                        a[i, j] = Color.FromArgb(255,0, 0, 0 );
+                    }
                 }
             }
-            Console.WriteLine(count);
-            var temp = new SupportVectorMachine(2);
+            /*
+            var c = new int[3, 3] {
+                { 0, 1, 0 },
+                { 0, 1, 0 },
+                { 0, 1, 0 }
+            };
+            a = Utils.LamMo(a, c);
+            */
+            Utils.SaveColorImage(@"D:\test10.png", a);
+            Utils.SaveColorText(@"D:\test0.txt", a);
+            var temp = new AnalystImage(a, 20, 839453, 476850);
+            var m = new bool[3, 3] { { false, true, false }, { true, true, true }, { false, true, false } };
+            var z = Utils.Giao(temp.Images, m);
+            Utils.SaveColorText(@"D:\test1.txt", temp.Images);
+            Utils.SaveColorText(@"D:\test2.txt", z);
         }
-
     }
 }
