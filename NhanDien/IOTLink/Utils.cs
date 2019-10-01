@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 
@@ -91,6 +92,63 @@ namespace NhanDien.IOTLink
         }
 
         /// <summary>
+        /// Save bitmap
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <param name="images"></param>
+        public static void SaveColorText(string filePath, bool[][] images)
+        {
+            var list = new List<string>();
+            var w = images.Length;
+            for (int i = 0; i < w; i++)
+            {
+                var str = "";
+                for (int j = 0; j < images[i].Length; j++)
+                {
+                    if (images[i][j])
+                    {
+                        str += "+";
+                    }
+                    else
+                    {
+                        str += "-";
+                    }
+                }
+                list.Add(str);
+            }
+            File.WriteAllLines(filePath, list);
+        }
+
+        /// <summary>
+        /// Save bitmap
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <param name="data"></param>
+        public static void SaveColorText(string filePath, byte[,,] data)
+        {
+            var list = new List<string>();
+            var w = data.GetLength(0);
+            var h = data.GetLength(1);
+            for (int i = 0; i < w; i++)
+            {
+                var str = "";
+                for (int j = 0; j < h; j++)
+                {
+                    if (data[i, j, 0] == 255)
+                    {
+                        str += "+";
+                    }
+                    else
+                    {
+                        str += "-";
+                    }
+                }
+                list.Add(str);
+            }
+            File.WriteAllLines(filePath, list);
+        }
+
+        /// <summary>
         /// Bitmap to color
         /// </summary>
         /// <param name="bmp"></param>
@@ -117,8 +175,8 @@ namespace NhanDien.IOTLink
         /// <returns></returns>
         public static Bitmap ColorToBitmap(Color[,] colors)
         {
-            int height = colors.GetLength(0);
-            int width = colors.GetLength(1);
+            int width = colors.GetLength(0);
+            int height = colors.GetLength(1);
             Bitmap bit = new Bitmap(width, height);
             for (int i = 0; i < width; i++)
             {
@@ -248,39 +306,210 @@ namespace NhanDien.IOTLink
         /// Giao hai ma trận
         /// </summary>
         /// <param name="a"></param>
-        /// <param name="matrix"></param>
+        /// <param name="matrix3x3"></param>
         /// <returns></returns>
-        public static bool[,] Giao(bool[,] a, bool[,] matrix)
+        public static bool[,] Giao(bool[,] a, bool[,] matrix3x3)
         {
             var width = a.GetLength(0);
             var height = a.GetLength(1);
+            var w = matrix3x3.GetLength(0);
+            var h = matrix3x3.GetLength(1);
             var rs = new bool[width, height];
-            var w = matrix.GetLength(0) / 2;
-            var h = matrix.GetLength(1) / 2;
-            var wMatrix = matrix.GetLength(0);
-            var hMatrix = matrix.GetLength(1);
-
             for (int i = 0; i < width; i++)
             {
                 for (int j = 0; j < height; j++)
                 {
-                    if (i < w || i >= width - w - 1 || j < h || j >= height - h - 1)
+                    var hit = true;
+                    for (int l = 0; l < w && hit; l++)
                     {
-                        rs[i, j] = a[i, j];
+                        for (int k = 0; k < h && hit; k++)
+                        {
+                            var m = i - (w / 2) + l;
+                            var n = j - (h / 2) + k;
+                            if (matrix3x3[l, k] && m >= 0 && n >=0 && m <width && n < height)
+                            {
+                                hit = a[m, n];
+                            }
+                        }
+                    }
+                    rs[i, j] = hit;
+                }
+            }
+            return rs;
+        }
+
+        /// <summary>
+        /// Kiêm tra có phải anh tối hết không
+        /// </summary>
+        /// <param name="a"></param>
+        /// <returns></returns>
+        public static bool IsEmpty(bool[,] a)
+        {
+            var width = a.GetLength(0);
+            var height = a.GetLength(1);
+            for (int i = 0; i < width; i++)
+            {
+                for (int j = 0; j < height; j++)
+                {
+                    if (a[i,j])
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Algorithm zhang suen thinning
+        /// </summary>
+        /// <param name="s"></param>
+        /// <returns></returns>
+        public static bool[][] ZhangSuenThinning(bool[][] s)
+        {
+            bool[][] temp = s;
+            bool even = true;
+
+            for (int a = 1; a < s.Length - 1; a++)
+            {
+                for (int b = 1; b < s[0].Length - 1; b++)
+                {
+                    if (SuenThinningAlg(a, b, temp, even))
+                    {
+                        temp[a][b] = false;
+                    }
+                    even = !even;
+                }
+            }
+            return temp;
+        }
+
+        /// <summary>
+        /// Suen thinning
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="s"></param>
+        /// <param name="even"></param>
+        /// <returns></returns>
+        public static bool SuenThinningAlg(int x, int y, bool[][] s, bool even)
+        {
+            bool p2 = s[x][y - 1];
+            bool p3 = s[x + 1][y - 1];
+            bool p4 = s[x + 1][y];
+            bool p5 = s[x + 1][y + 1];
+            bool p6 = s[x][y + 1];
+            bool p7 = s[x - 1][y + 1];
+            bool p8 = s[x - 1][y];
+            bool p9 = s[x - 1][y - 1];
+
+
+            int bp1 = NumberOfNonZeroNeighbors(x, y, s);
+            if (bp1 >= 2 && bp1 <= 6)//2nd condition
+            {
+                if (NumberOfZeroToOneTransitionFromP9(x, y, s) == 1)
+                {
+                    if (even)
+                    {
+                        if (!((p2 && p4) && p8))
+                        {
+                            if (!(p2 && p6 && p8))
+                            {
+                                return true;
+                            }
+                        }
                     }
                     else
                     {
-                        for (int l = 0; l < wMatrix; l++)
+                        if (!(p2 && p4 && p6))
                         {
-                            for (int k = 0; k < hMatrix; k++)
+                            if (!(p4 && p6 && p8))
                             {
-                                rs[i, j] = a[i, j] & matrix[l,k];
+                                return true;
                             }
                         }
                     }
                 }
             }
-            return rs;
+            return false;
+        }
+
+        /// <summary>
+        /// Number of zero to me transition from p9
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="s"></param>
+        /// <returns></returns>
+        public static int NumberOfZeroToOneTransitionFromP9(int x, int y, bool[][] s)
+        {
+            bool p2 = s[x][y - 1];
+            bool p3 = s[x + 1][y - 1];
+            bool p4 = s[x + 1][y];
+            bool p5 = s[x + 1][y + 1];
+            bool p6 = s[x][y + 1];
+            bool p7 = s[x - 1][y + 1];
+            bool p8 = s[x - 1][y];
+            bool p9 = s[x - 1][y - 1];
+
+            int A = Convert.ToInt32(p2 == false && p3 == true) + Convert.ToInt32(p3 == false && p4 == true) +
+                     Convert.ToInt32(p4 == false && p5 == true) + Convert.ToInt32(p5 == false && p6 == true) +
+                     Convert.ToInt32(p6 == false && p7 == true) + Convert.ToInt32(p7 == false && p8 == true) +
+                     Convert.ToInt32(p8 == false && p9 == true) + Convert.ToInt32(p9 == false && p2 == true);
+            return A;
+        }
+
+        /// <summary>
+        /// Number of non zero neighbors
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="s"></param>
+        /// <returns></returns>
+        public static int NumberOfNonZeroNeighbors(int x, int y, bool[][] s)
+        {
+            int count = 0;
+            if (s[x - 1][y])
+            {
+                count++;
+            }
+
+            if (s[x - 1][y + 1])
+            {
+                count++;
+            }
+
+            if (s[x - 1][y - 1])
+            {
+                count++;
+            }
+
+            if (s[x][y + 1])
+            {
+                count++;
+            }
+
+            if (s[x][y - 1])
+            {
+                count++;
+            }
+
+            if (s[x + 1][y])
+            {
+                count++;
+            }
+
+            if (s[x + 1][y + 1])
+            {
+                count++;
+            }
+
+            if (s[x + 1][y - 1])
+            {
+                count++;
+            }
+
+            return count;
         }
     }
 }
