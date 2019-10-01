@@ -1,9 +1,15 @@
 ﻿using System.Threading.Tasks;
 
-namespace NhanDien.IOTLink.Process
+namespace NhanDien.IOTLink.Process.Algorithm
 {
+    /// <summary>
+    /// Alogrithm Zhan Suen
+    /// </summary>
     public static class ZhangSuen
     {
+        /// <summary>
+        /// Maximum iterations
+        /// </summary>
         public static int MaxIterations = 7;
 
         /// <summary>
@@ -15,7 +21,7 @@ namespace NhanDien.IOTLink.Process
             var temp = (byte[,,])data.Clone();
             int count = 0;
             int iterations = MaxIterations;
-            do  // the missing iteration
+            do
             {
                 count = Step(1, temp, data);
                 temp = (byte[,,])data.Clone();
@@ -26,18 +32,24 @@ namespace NhanDien.IOTLink.Process
             while (count > 0 && iterations > 0);
         }
 
-        static int Step(int stepNo, byte[,,] temp, byte[,,] data)
+        /// <summary>
+        /// Step
+        /// </summary>
+        /// <param name="stepNo"></param>
+        /// <param name="temp"></param>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        private static int Step(int stepNo, byte[,,] temp, byte[,,] data)
         {
             int count = 0;
             var width = temp.GetLength(1);
             var height = temp.GetLength(0);
-
-            Parallel.For((int)1, width - 1, x =>
+            Parallel.For(1, width - 1, x =>
             {
                 for (int y = 1; y < height - 1; y++)
+                {
                     if (SuenThinningAlg(x, y, temp, stepNo == 2))
                     {
-                        // still changes happening?
                         if (data[y, x, 0] > 0)
                         {
                             count++;
@@ -45,11 +57,20 @@ namespace NhanDien.IOTLink.Process
 
                         data[y, x, 0] = 0;
                     }
+                }
             });
             return count;
         }
 
-        static bool SuenThinningAlg(int x, int y, byte[,,] data, bool even)
+        /// <summary>
+        /// Suen thinning algorithm
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="data"></param>
+        /// <param name="even"></param>
+        /// <returns></returns>
+        private static bool SuenThinningAlg(int x, int y, byte[,,] data, bool even)
         {
             var p2 = data[y - 1, x, 0];
             var p3 = data[y - 1, x + 1, 0];
@@ -60,12 +81,12 @@ namespace NhanDien.IOTLink.Process
             var p8 = data[y, x - 1, 0];
             var p9 = data[y - 1, x - 1, 0];
 
-            //calc NumberOfNonZeroNeighbors
+            //calculation NumberOfNonZeroNeighbors
             int bp1 = p2 + p3 + p4 + p5 + p6 + p7 + p8 + p9;
 
             if (bp1 >= 2 * 255 && bp1 <= 6 * 255) //2nd condition
             {
-                //clac NumberOfZeroToOneTransitionFromP9
+                //calculation NumberOfZeroToOneTransitionFromP9
                 int bp2 = (~p2 & p3) + (~p3 & p4) + (~p4 & p5) + (~p5 & p6) + (~p6 & p7) + (~p7 & p8) + (~p8 & p9) + (~p9 & p2);
 
                 if (bp2 == 255)
