@@ -11,7 +11,7 @@ namespace NhanDien.IOTLink
 
             string startupPath = @"D:\MyProject\C#\NhanDien\NhanDien\";
             //var path = startupPath + @"test\839572,476863,20.png";
-            var path = startupPath + @"test\image_ham.png";
+            var path = startupPath + @"test\image1.png";
             var a = Utils.GetColorsImage(path);
             
             int count = 0;

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using NhanDien.IOTLink.Process.Algorithm;
+using System.Collections.Generic;
 using System.Drawing;
 
 namespace NhanDien.IOTLink.Process
@@ -41,8 +42,16 @@ namespace NhanDien.IOTLink.Process
         {
             Colors = colors;
             BoundsFromTile = new BoundsFromTile(x, y, z);
-            var w = colors.GetLength(0);
-            var h = colors.GetLength(1);
+            SetValue();
+        }
+
+        /// <summary>
+        /// Set value
+        /// </summary>
+        private void SetValue()
+        {
+            var w = Colors.GetLength(0);
+            var h = Colors.GetLength(1);
             var tempData = new byte[w + 2, h + 2, 1];
             Data = new byte[w, h, 1];
             Image = new bool[w, h];
@@ -50,7 +59,7 @@ namespace NhanDien.IOTLink.Process
             {
                 for (int j = 0; j < h; j++)
                 {
-                    if (colors[i,j].A == 255 && colors[i, j].B == 255 && colors[i, j].G == 255 && colors[i, j].R == 255)
+                    if (Colors[i, j].A == 255 && Colors[i, j].B == 255 && Colors[i, j].G == 255 && Colors[i, j].R == 255)
                     {
                         tempData[i + 1, j + 1, 0] = 255;
                     }
@@ -70,7 +79,7 @@ namespace NhanDien.IOTLink.Process
                 {
                     Data[i, j, 0] = tempData[i, j, 0];
                     Image[i, j] = Data[i, j, 0] == 255 ? true : false;
-                    if (Image[i,j])
+                    if (Image[i, j])
                     {
                         Colors[i, j] = Color.Black;
                     }

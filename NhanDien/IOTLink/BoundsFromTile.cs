@@ -79,6 +79,21 @@ namespace NhanDien.IOTLink
         }
 
         /// <summary>
+        /// Box
+        /// </summary>
+        /// <param name="box"></param>
+        public BoundsFromTile(string box)
+        {
+            Box = box;
+            var temp = box.Split(",");
+            var north = double.Parse(temp[0]);
+            var south = double.Parse(temp[1]);
+            var west = double.Parse(temp[2]);
+            var east = double.Parse(temp[3]);
+            SWNE = new List<double> { south, west, north, east };
+        }
+
+        /// <summary>
         /// Tile to latitude
         /// </summary>
         /// <param name="y"></param>
@@ -115,6 +130,19 @@ namespace NhanDien.IOTLink
             var my = (y * res) - (2 * Math.PI * Constant.R / 2.0);
             my = -my;
             return new List<double> { mx, my };
+        }
+
+        /// <summary>
+        /// Pixcel to location
+        /// </summary>
+        /// <param name="i"></param>
+        /// <param name="j"></param>
+        /// <param name="w"></param>
+        /// <param name="h"></param>
+        /// <returns></returns>
+        public Location PixcelToLocation(int i, int j, int w, int h)
+        {
+            return null;
         }
 
         /// <summary>
