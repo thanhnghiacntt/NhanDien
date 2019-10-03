@@ -59,7 +59,8 @@ namespace NhanDien.IOTLink.Process
             {
                 for (int j = 0; j < h; j++)
                 {
-                    if (Colors[i, j].A == 255 && Colors[i, j].B == 255 && Colors[i, j].G == 255 && Colors[i, j].R == 255)
+                    var argb = Colors[i, j].ToArgb();
+                    if (argb == Constant.ArgbWhite || argb == Constant.ArgbTunnel || argb == Constant.ArgbYellow)
                     {
                         tempData[i + 1, j + 1, 0] = 255;
                     }
@@ -69,7 +70,8 @@ namespace NhanDien.IOTLink.Process
                     }
                 }
             }
-            for (int i = 0; i < 4; i++)
+            MedianFilter.Filter(tempData);
+            for (int i = 0; i < 5; i++)
             {
                 ZhangSuen.ZhangSuenThinning(tempData);
             }
@@ -77,7 +79,7 @@ namespace NhanDien.IOTLink.Process
             {
                 for (int j = 0; j < h; j++)
                 {
-                    Data[i, j, 0] = tempData[i, j, 0];
+                    Data[i, j, 0] = tempData[i + 1, j + 1, 0];
                     Image[i, j] = Data[i, j, 0] == 255 ? true : false;
                     if (Image[i, j])
                     {

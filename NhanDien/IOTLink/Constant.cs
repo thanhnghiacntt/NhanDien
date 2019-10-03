@@ -18,7 +18,7 @@
         /// <summary>
         /// Yellow
         /// </summary>
-        public static int ArgbYellow = -402825;
+        public static int ArgbYellow = -3409;
 
         /// <summary>
         /// Argb tunnel color

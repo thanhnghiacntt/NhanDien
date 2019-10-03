@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 
@@ -129,10 +128,10 @@ namespace NhanDien.IOTLink
             var list = new List<string>();
             var w = data.GetLength(0);
             var h = data.GetLength(1);
-            for (int i = 0; i < w; i++)
+            for (int j = 0; j < h; j++)
             {
                 var str = "";
-                for (int j = 0; j < h; j++)
+                for (int i = 0; i < w; i++)
                 {
                     if (data[i, j, 0] == 255)
                     {
