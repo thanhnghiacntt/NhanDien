@@ -1,8 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using Newtonsoft.Json;
+using NhanDien.IOTLink.Process.Model;
+using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 
-namespace NhanDien.IOTLink
+namespace NhanDien.IOTLink.Helper
 {
     /// <summary>
     /// Utils
@@ -357,6 +360,49 @@ namespace NhanDien.IOTLink
                 }
             }
             return true;
+        }
+
+        /// <summary>
+        /// Pixcel to location
+        /// </summary>
+        /// <param name="i">Pixcel at i</param>
+        /// <param name="j">Pixcel at j</param>
+        /// <param name="w">Width of image</param>
+        /// <param name="h">Height of image</param>
+        /// <param name="bounds"></param>
+        /// <returns></returns>
+        public static Location PixcelToLocation(int i, int j, int w, int h, Bounds bounds)
+        {
+            double px = i / (w*1.0);
+            double py = j / (h * 1.0);
+            var lng = (px * (bounds.MaxLng - bounds.MinLng)) + bounds.MinLng;
+            var lat = (py * (bounds.MinLat - bounds.MaxLat)) + bounds.MaxLat;
+            int digits = 5;
+            var location = new Location
+            {
+                Lng = Math.Round(lng, digits),
+                Lat = Math.Round(lat, digits),
+            };
+            return location;
+        }
+
+        /// <summary>
+        /// Source to string
+        /// </summary>
+        /// <param name="source"></param>
+        /// <returns></returns>
+        public static string ToString(object source)
+        {
+            string json = null;
+            if (source is string temp)
+            {
+                json = temp;
+            }
+            else
+            {
+                json = JsonConvert.SerializeObject(source);
+            }
+            return json;
         }
     }
 }

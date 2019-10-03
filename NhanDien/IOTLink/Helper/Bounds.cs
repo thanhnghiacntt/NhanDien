@@ -1,49 +1,70 @@
-﻿using System;
+﻿using NhanDien.IOTLink.Process.Model;
+using System;
 using System.Collections.Generic;
 
-namespace NhanDien.IOTLink
+namespace NhanDien.IOTLink.Helper
 {
-    public class BoundsFromTile
+    public class Bounds
     {
         /// <summary>
         /// Box nam tây bắc đông  cách nhau bởi dấu phẩy
         /// </summary>
-        public string Box { get; set; }
+        public string Box { get; private set; }
 
         /// <summary>
         /// Nam tây bắc đông (South, West, North, East) ~ (minLat, minLng, maxLat, maxLng)
         /// </summary>
-        public IList<double> SWNE { get; set; }
+        public IList<double> SWNE { get; private set; }
 
         /// <summary>
         /// Tọa độ nhỏ
         /// </summary>
-        public Location Min { get; set; }
+        public Location Min { get; private set; }
 
         /// <summary>
         /// Tọa độ trung tâm
         /// </summary>
-        public Location Middle { get; set; }
+        public Location Middle { get; private set; }
 
         /// <summary>
         /// Tọa độ lớn
         /// </summary>
-        public Location Max { get; set; }
+        public Location Max { get; private set; }
 
         /// <summary>
         /// Mức zoom
         /// </summary>
-        public int Zoom { get; set; }
+        public int Zoom { get; private set; }
 
         /// <summary>
         /// X
         /// </summary>
-        public int X { get; set; }
+        public int X { get; private set; }
 
         /// <summary>
         /// Y
         /// </summary>
-        public int Y { get; set; }
+        public int Y { get; private set; }
+
+        /// <summary>
+        /// Maximum longtitude
+        /// </summary>
+        public double MaxLng { get; set; }
+
+        /// <summary>
+        /// Maximum latitude
+        /// </summary>
+        public double MaxLat { get; set; }
+
+        /// <summary>
+        /// Minimum longtitude
+        /// </summary>
+        public double MinLng { get; set; }
+
+        /// <summary>
+        /// Minimum latitude
+        /// </summary>
+        public double MinLat { get; set; }
 
         /// <summary>
         /// Hàm khởi tạo
@@ -51,16 +72,44 @@ namespace NhanDien.IOTLink
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <param name="z"></param>
-        public BoundsFromTile(int x, int y, int z)
+        public Bounds(int x, int y, int z)
         {
             Zoom = z;
             X = x;
             Y = y;
-            var north = Tile2Lat(y, z);
-            var south = Tile2Lat(y + 1, z);
+            var south = Tile2Lat(y, z);
+            var north = Tile2Lat(y + 1, z);
             var west = Tile2Lng(x, z);
             var east = Tile2Lng(x + 1, z);
-            Min = new Location {
+            SetMinMiddleMax(south, west, north, east);
+        }
+
+        /// <summary>
+        /// Box
+        /// </summary>
+        /// <param name="box"></param>
+        public Bounds(string box)
+        {
+            Box = box;
+            var temp = box.Split(",");
+            var south = double.Parse(temp[0]);
+            var west = double.Parse(temp[1]);
+            var north = double.Parse(temp[2]);
+            var east = double.Parse(temp[3]);
+            SetMinMiddleMax(south, west, north, east);
+        }
+
+        /// <summary>
+        /// Set min middle max
+        /// </summary>
+        /// <param name="south"></param>
+        /// <param name="west"></param>
+        /// <param name="north"></param>
+        /// <param name="east"></param>
+        private void SetMinMiddleMax(double south, double west, double north, double east)
+        {
+            Min = new Location
+            {
                 Lat = south,
                 Lng = west
             };
@@ -76,21 +125,10 @@ namespace NhanDien.IOTLink
                 Lat = (Min.Lat + Max.Lat) / 2,
                 Lng = (Min.Lng + Max.Lng) / 2
             };
-        }
-
-        /// <summary>
-        /// Box
-        /// </summary>
-        /// <param name="box"></param>
-        public BoundsFromTile(string box)
-        {
-            Box = box;
-            var temp = box.Split(",");
-            var north = double.Parse(temp[0]);
-            var south = double.Parse(temp[1]);
-            var west = double.Parse(temp[2]);
-            var east = double.Parse(temp[3]);
-            SWNE = new List<double> { south, west, north, east };
+            MinLat = south;
+            MinLng = west;
+            MaxLat = north;
+            MaxLng = east;
         }
 
         /// <summary>
@@ -130,19 +168,6 @@ namespace NhanDien.IOTLink
             var my = (y * res) - (2 * Math.PI * Constant.R / 2.0);
             my = -my;
             return new List<double> { mx, my };
-        }
-
-        /// <summary>
-        /// Pixcel to location
-        /// </summary>
-        /// <param name="i"></param>
-        /// <param name="j"></param>
-        /// <param name="w"></param>
-        /// <param name="h"></param>
-        /// <returns></returns>
-        public Location PixcelToLocation(int i, int j, int w, int h)
-        {
-            return null;
         }
 
         /// <summary>

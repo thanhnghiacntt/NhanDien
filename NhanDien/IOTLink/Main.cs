@@ -1,5 +1,5 @@
-﻿using NhanDien.IOTLink.Process;
-
+﻿using NhanDien.IOTLink.Helper;
+using NhanDien.IOTLink.Service;
 
 namespace NhanDien.IOTLink
 {
@@ -7,16 +7,18 @@ namespace NhanDien.IOTLink
     {
         public static void Process()
         {
-
             string startupPath = @"D:\MyProject\C#\NhanDien\NhanDien\";
             //var path = startupPath + @"test\839572,476863,20.png";
-            var path = startupPath + @"test\image1.png";
+            var path = startupPath + @"test\image5.png";
             var a = Utils.GetColorsImage(path);
             Utils.SaveColorImage(@"D:\test10.png", a);
             Utils.SaveColorText(@"D:\test0.txt", a);
-            var temp = new AnalystImage(a, 20, 839453, 476850);
-            Utils.SaveColorImage(@"D:\test12.png", temp.Colors);
-            Utils.SaveColorText(@"D:\test2.txt", temp.Data);
+            var temp = new AnalystImage(a, "16.06035,108.21150,16.06832,108.22510");
+            Utils.SaveColorImage(@"D:\test14.png", temp.Colors);
+            Utils.SaveColorText(@"D:\test3.txt", temp.Data);
+            var b = System.IO.File.CreateText(@"D:\\test4.txt");
+            b.WriteLine(Utils.ToString(temp.GeoJson));
+            b.Close();
         }
     }
 }

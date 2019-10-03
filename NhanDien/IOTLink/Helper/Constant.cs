@@ -1,4 +1,4 @@
-﻿namespace NhanDien.IOTLink
+﻿namespace NhanDien.IOTLink.Helper
 {
     /// <summary>
     /// Định nghĩa các hằng số
