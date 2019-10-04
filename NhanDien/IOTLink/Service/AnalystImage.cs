@@ -121,31 +121,12 @@ namespace NhanDien.IOTLink.Service
         {
             var w = Colors.GetLength(0);
             var h = Colors.GetLength(1);
-            var geometry = new Geometry
-            {
-                Type = "MultiPoint",
-                Coordinates = new List<object>()
-            };
-            var feateure = new Feature
-            {
-                Type = "Feature",
-                Properties = new Dictionary<string, object>(),
-                Geometry = geometry
-            };
-            GeoJson = new GeoJson()
-            {
-                Type = "FeatureCollection",
-                Features = new List<Feature>()
-                {
-                    feateure
-                }
-            };
             var hash = new HashSet<string>();
             for (int i = 0; i < w; i++)
             {
                 for (int j = 0; j < h; j++)
                 {
-                    if (Image[i,j])
+                    if (Image[i, j])
                     {
                         var location = Utils.PixcelToLocation(i, j, w, h, Bounds);
                         var str = location.Lat + "," + location.Lng;
@@ -157,7 +138,6 @@ namespace NhanDien.IOTLink.Service
                                 location.Lng,
                                 location.Lat
                             };
-                            geometry.Coordinates.Add(temp);
                         }
                         else
                         {

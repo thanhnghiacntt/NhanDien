@@ -6,8 +6,8 @@ namespace NhanDien
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
             IOTLink.Main.Process();
+            Console.WriteLine("Đã Xong!");
             Console.ReadKey();
         }
     }
