@@ -1,5 +1,7 @@
 ﻿using NhanDien.IOTLink.Process.Model;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace NhanDien.IOTLink.Helper
 {
@@ -19,20 +21,28 @@ namespace NhanDien.IOTLink.Helper
         private readonly HashSet<string> hash;
 
         /// <summary>
+        /// Bounds
+        /// </summary>
+        private readonly Bounds bounds;
+
+        /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="image"></param>
-        public FindWay(bool[,] image)
+        /// <param name="bounds"></param>
+        public FindWay(bool[,] image, Bounds bounds)
         {
             this.image = (bool[,])image.Clone();
+            this.bounds = bounds;
             hash = new HashSet<string>();
+            Utils.SaveColorText(@"D:/test100.txt", image);
         }
 
 
         /// <summary>
         /// Update geojson
         /// </summary>
-        private GeoJson FindGeoJson()
+        public GeoJson FindGeoJson()
         {
             var geoJson = new GeoJson
             {
@@ -73,6 +83,7 @@ namespace NhanDien.IOTLink.Helper
         private Feature FindFeature(int i, int j)
         {
             var temp = FindListLocation(i, j);
+            temp = ProjectWay(temp);
             var coordinates = new List<object>();
             foreach (var item in temp)
             {
@@ -90,7 +101,7 @@ namespace NhanDien.IOTLink.Helper
                 coordinates = new List<object>
                 {
                     temp[0].Lng,
-                    temp[1].Lat
+                    temp[0].Lat
                 };
             }
             Feature feature = new Feature()
@@ -115,36 +126,370 @@ namespace NhanDien.IOTLink.Helper
         private IList<Location> FindListLocation(int i, int j)
         {
             var rs = new List<Location>();
-            var w = image.GetLength(0);
-            var h = image.GetLength(1);
             var m = i;
             var n = j;
+            var w = image.GetLength(0);
+            var h = image.GetLength(1);
+            var prex = Direction.Center;
             while (true)
             {
-                if (m < w - 1 && m > 1 && n < h - 1 && n > 1)
+                m = i;
+                n = j;
+                var isExist = false;
+                var count = Utils.Count(i, j, w, h, image);
+                if (count == 0)
                 {
-                    var count = 0;
-                    for (int k = m - 1; k <= m + 1; k++)
+                    image[m, n] = false;
+                    var temp = Utils.PixcelToLocation(m, n, w, h, bounds);
+                    rs.Add(temp);
+                    break;
+                }
+                else if (count == 1)
+                {
+                    image[m, n] = false;
+                    var temp = Utils.PixcelToLocation(m, n, w, h, bounds);
+                    rs.Add(temp);
+                    if (Utils.IsTruePoint(i, j + 1, w, h, image))
                     {
-                        for (int l = n - 1; l <= n + 1; l++)
-                        {
-                            if (image[k,l])
-                            {
-                                count++;
-                            }
-                        }
+                        j++;
                     }
-                    if (count == 4)
+                    if (Utils.IsTruePoint(i, j - 1, w, h, image))
                     {
-                        break;
+                        j--;
                     }
+                    if (Utils.IsTruePoint(i + 1, j, w, h, image))
+                    {
+                        i++;
+                    }
+                    if (Utils.IsTruePoint(i - 1, j, w, h, image))
+                    {
+                        i--;
+                    }
+                    if (Utils.IsTruePoint(i + 1, j + 1, w, h, image))
+                    {
+                        i++;
+                        j++;
+                    }
+                    if (Utils.IsTruePoint(i + 1, j - 1, w, h, image))
+                    {
+                        i++;
+                        j--;
+                    }
+                    if (Utils.IsTruePoint(i - 1, j + 1, w, h, image))
+                    {
+                        i--;
+                        j++;
+                    }
+                    if (Utils.IsTruePoint(i - 1, j - 1, w, h, image))
+                    {
+                        i--;
+                        j--;
+                    }
+                    var directions = Utils.FindDirection(i, j, w, h, image);
+                    prex = directions.FirstOrDefault();
                 }
                 else
                 {
-                    break;
+                    var directions = Utils.FindDirection(i, j, w, h, image);
+                    Location locaion = Utils.PixcelToLocation(i, j, w, h, bounds);
+                    switch (prex)
+                    {
+                        case Direction.Center:
+                            if (directions.Contains(Direction.Right))
+                            {
+                                prex = Direction.Right;
+                                i++;
+                            }
+                            else if (directions.Contains(Direction.Bottom))
+                            {
+                                prex = Direction.Bottom;
+                                j++;
+                            }
+                            else if (directions.Contains(Direction.Left))
+                            {
+                                prex = Direction.Left;
+                                i--;
+                            }
+                            else if (directions.Contains(Direction.Top))
+                            {
+                                prex = Direction.Top;
+                                j--;
+                            }
+                            else if (directions.Contains(Direction.TopRight))
+                            {
+                                prex = Direction.TopRight;
+                                i++;
+                                j--;
+                            }
+                            else if (directions.Contains(Direction.TopLeft))
+                            {
+                                prex = Direction.TopLeft;
+                                i--;
+                                j--;
+                            }
+                            else if (directions.Contains(Direction.BottomLeft))
+                            {
+                                prex = Direction.BottomLeft;
+                                i--;
+                                j++;
+                            }
+                            else if (directions.Contains(Direction.BottomRight))
+                            {
+                                prex = Direction.BottomRight;
+                                i++;
+                                i++;
+                            }
+                            break;
+                        case Direction.Top:
+                            if (directions.Contains(Direction.Top))
+                            {
+                                prex = Direction.Top;
+                                j--;
+                            }
+                            else if (directions.Contains(Direction.TopRight))
+                            {
+                                prex = Direction.TopRight;
+                                i++;
+                                j--;
+                            }
+                            else if (directions.Contains(Direction.TopLeft))
+                            {
+                                prex = Direction.TopLeft;
+                                i--;
+                                j--;
+                            }
+                            else
+                            {
+                                isExist = true;
+                            }
+                            break;
+                        case Direction.Bottom:
+                            if (directions.Contains(Direction.Bottom))
+                            {
+                                prex = Direction.Bottom;
+                                j++;
+                            }
+                            else if (directions.Contains(Direction.BottomLeft))
+                            {
+                                prex = Direction.BottomLeft;
+                                i--;
+                                j++;
+                            }
+                            else if (directions.Contains(Direction.BottomRight))
+                            {
+                                prex = Direction.BottomRight;
+                                i++;
+                                i++;
+                            }
+                            else
+                            {
+                                isExist = true;
+                            }
+                            break;
+                        case Direction.Left:
+                            if (directions.Contains(Direction.Left))
+                            {
+                                prex = Direction.Left;
+                                i--;
+                            }
+                            else if (directions.Contains(Direction.TopLeft))
+                            {
+                                prex = Direction.TopLeft;
+                                i--;
+                                j--;
+                            }
+                            else if (directions.Contains(Direction.BottomLeft))
+                            {
+                                prex = Direction.BottomLeft;
+                                i--;
+                                j++;
+                            }
+                            else
+                            {
+                                isExist = true;
+                            }
+                            break;
+                        case Direction.Right:
+                            if (directions.Contains(Direction.Right))
+                            {
+                                prex = Direction.Right;
+                                i++;
+                            }
+                            else if (directions.Contains(Direction.TopRight))
+                            {
+                                prex = Direction.TopRight;
+                                i++;
+                                j--;
+                            }
+                            else if (directions.Contains(Direction.BottomRight))
+                            {
+                                prex = Direction.BottomRight;
+                                i++;
+                                i++;
+                            }
+                            else
+                            {
+                                isExist = true;
+                            }
+                            break;
+                        case Direction.TopLeft:
+                            if (directions.Contains(Direction.TopLeft))
+                            {
+                                prex = Direction.TopLeft;
+                                i--;
+                                j--;
+                            }
+                            else if (directions.Contains(Direction.Left))
+                            {
+                                prex = Direction.Left;
+                                i--;
+                            }
+                            else if (directions.Contains(Direction.Top))
+                            {
+                                prex = Direction.Top;
+                                j--;
+                            }
+                            else
+                            {
+                                isExist = true;
+                            }
+                            break;
+                        case Direction.TopRight:
+                            if (directions.Contains(Direction.TopRight))
+                            {
+                                prex = Direction.TopRight;
+                                i++;
+                                j--;
+                            }
+                            else if (directions.Contains(Direction.Right))
+                            {
+                                prex = Direction.Right;
+                                i++;
+                            }
+                            else if (directions.Contains(Direction.Top))
+                            {
+                                prex = Direction.Top;
+                                j--;
+                            }
+                            else
+                            {
+                                isExist = true;
+                            }
+                            break;
+                        case Direction.BottomLeft:
+                            if (directions.Contains(Direction.BottomLeft))
+                            {
+                                prex = Direction.BottomLeft;
+                                i--;
+                                j++;
+                            }
+                            else if (directions.Contains(Direction.Bottom))
+                            {
+                                prex = Direction.Bottom;
+                                j++;
+                            }
+                            else if (directions.Contains(Direction.Left))
+                            {
+                                prex = Direction.Left;
+                                i--;
+                            }
+                            else
+                            {
+                                isExist = true;
+                            }
+                            break;
+                        case Direction.BottomRight:
+                            if (directions.Contains(Direction.BottomRight))
+                            {
+                                prex = Direction.BottomRight;
+                                i++;
+                                i++;
+                            }
+                            else if (directions.Contains(Direction.Right))
+                            {
+                                prex = Direction.Right;
+                                i++;
+                            }
+                            else if (directions.Contains(Direction.Bottom))
+                            {
+                                prex = Direction.Bottom;
+                                j++;
+                            }
+                            else
+                            {
+                                isExist = true;
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                    if (isExist)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        image[m, n] = false;
+                        var temp = Utils.PixcelToLocation(m, n, w, h, bounds);
+                        rs.Add(temp);
+                    }
                 }
             }
             return rs;
+        }
+
+        /// <summary>
+        /// Xử lý loại bỏ các điểm trên cùng 1 đường thẳng
+        /// </summary>
+        /// <param name="temp"></param>
+        /// <returns></returns>
+        private IList<Location> ProjectWay(IList<Location> temp)
+        {
+            Location a = temp[0];
+            Location b = null;
+            Location c = null;
+            var list = new List<Location>
+            {
+                a
+            };
+            if (temp.Count > 3)
+            {
+                for (int i = 2; i < temp.Count; i++)
+                {
+                    b = temp[i - 1];
+                    c = temp[i];
+                    if (!IsWay(a,b,c))
+                    {
+                        list.Add(b);
+                        a = b;
+                    }
+                }
+                list.Add(c);
+            }
+            else
+            {
+                return temp;
+            }
+            return list;
+        }
+
+        /// <summary>
+        /// 3 điểm a,b,c có nằm trên cùng đường thẳng hay không
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <param name="c"></param>
+        /// <returns></returns>
+        private bool IsWay(Location a, Location b, Location c)
+        {
+            var ab = Math.Sqrt(Math.Pow(a.Lat - b.Lat, 2) + Math.Pow(a.Lng - b.Lng, 2));
+            var bc = Math.Sqrt(Math.Pow(b.Lat - c.Lat, 2) + Math.Pow(b.Lng - c.Lng, 2));
+            var ac = Math.Sqrt(Math.Pow(a.Lat - c.Lat, 2) + Math.Pow(a.Lng - c.Lng, 2));
+            if (Utils.Compare(ac, ab+bc))
+            {
+                return true;
+            }
+            return false;
         }
     }
 }

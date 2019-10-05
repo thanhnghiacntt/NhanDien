@@ -44,12 +44,12 @@ namespace NhanDien.IOTLink.Helper
             var list = new List<string>();
             var w = colors.GetLength(0);
             var h = colors.GetLength(1);
-            for (int i = 0; i < w; i++)
+            for (int i = 0; i < h; i++)
             {
                 var str = "";
-                for (int j = 0; j < h; j++)
+                for (int j = 0; j < w; j++)
                 {
-                    var c = colors[i, j];
+                    var c = colors[j, i];
                     if (c.A == 255 && c.B == 0 && c.G == 0 && c.R == 0)
                     {
                         str += "-";
@@ -74,40 +74,12 @@ namespace NhanDien.IOTLink.Helper
             var list = new List<string>();
             var w = images.GetLength(0);
             var h = images.GetLength(1);
-            for (int i = 0; i < w; i++)
+            for (int i = 0; i < h; i++)
             {
                 var str = "";
-                for (int j = 0; j < h; j++)
+                for (int j = 0; j < w; j++)
                 {
-                    if (images[i, j])
-                    {
-                        str += "+";
-                    }
-                    else
-                    {
-                        str += "-";
-                    }
-                }
-                list.Add(str);
-            }
-            File.WriteAllLines(filePath, list);
-        }
-
-        /// <summary>
-        /// Save bitmap
-        /// </summary>
-        /// <param name="filePath"></param>
-        /// <param name="images"></param>
-        public static void SaveColorText(string filePath, bool[][] images)
-        {
-            var list = new List<string>();
-            var w = images.Length;
-            for (int i = 0; i < w; i++)
-            {
-                var str = "";
-                for (int j = 0; j < images[i].Length; j++)
-                {
-                    if (images[i][j])
+                    if (images[j,i])
                     {
                         str += "+";
                     }
@@ -403,6 +375,117 @@ namespace NhanDien.IOTLink.Helper
                 json = JsonConvert.SerializeObject(source);
             }
             return json;
+        }
+
+        /// <summary>
+        /// Đếm tại vị trí này xung quanh có bao nhiêu phần tử
+        /// </summary>
+        /// <param name="i"></param>
+        /// <param name="j"></param>
+        /// <param name="w"></param>
+        /// <param name="h"></param>
+        /// <param name="image"></param>
+        /// <returns></returns>
+        public static int Count(int i, int j, int w, int h, bool[,] image)
+        {
+            var count = 0;
+            for (int l = i - 1; l <= i + 1; l++)
+            {
+                for (int m = j - 1; m <= j + 1; m++)
+                {
+                    if (IsTruePoint(i, j, w, h, image))
+                    {
+                        /// Tránh vị trí trung tâm
+                        if (m != j || l != i)
+                        {
+                            count++;
+                        }
+                    }
+                }
+            }
+            return count;
+        }
+
+
+        /// <summary>
+        /// Tại vị trí này phải phần tử true hay không
+        /// </summary>
+        /// <param name="i"></param>
+        /// <param name="j"></param>
+        /// <param name="w"></param>
+        /// <param name="h"></param>
+        /// <param name="image"></param>
+        /// <returns></returns>
+        public static bool IsTruePoint(int i, int j, int w, int h, bool[,] image)
+        {
+            if (i >= 0 && j >= 0 && i < w && j < h)
+            {
+                return image[i, j];
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Find direction
+        /// </summary>
+        /// <param name="i"></param>
+        /// <param name="j"></param>
+        /// <param name="w"></param>
+        /// <param name="h"></param>
+        /// <param name="image"></param>
+        /// <returns></returns>
+        public static HashSet<Direction> FindDirection(int i, int j, int w, int h, bool[,] image)
+        {
+            HashSet<Direction> hash = new HashSet<Direction>();
+            if (IsTruePoint(i, j - 1, w, h, image))
+            {
+                hash.Add(Direction.Top);
+            }
+            if (IsTruePoint(i - 1, j, w, h, image))
+            {
+                hash.Add(Direction.Left);
+            }
+            if (IsTruePoint(i, j + 1, w, h, image))
+            {
+                hash.Add(Direction.Bottom);
+            }
+            if (IsTruePoint(i + 1, j, w, h, image))
+            {
+                hash.Add(Direction.Right);
+            }
+            if (IsTruePoint(i - 1, j - 1, w, h, image))
+            {
+                hash.Add(Direction.TopLeft);
+            }
+            if (IsTruePoint(i + 1, j - 1, w, h, image))
+            {
+                hash.Add(Direction.TopRight);
+            }
+            if (IsTruePoint(i - 1, j + 1, w, h, image))
+            {
+                hash.Add(Direction.BottomLeft);
+            }
+            if (IsTruePoint(i + 1, j + 1, w, h, image))
+            {
+                hash.Add(Direction.BottomRight);
+            }
+            return hash;
+        }
+
+        /// <summary>
+        /// Compare 2 double
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        public static bool Compare(double a, double b, double e = 0.000001)
+        {
+            if (Math.Abs(a-b) < e)
+            {
+                return true;
+            }
+            return false;
         }
     }
 }

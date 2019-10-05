@@ -15,7 +15,8 @@ namespace NhanDien.IOTLink
             Utils.SaveColorText(@"D:\test0.txt", a);
             var temp = new AnalystImage(a, "16.06035,108.21150,16.06832,108.22510");
             Utils.SaveColorImage(@"D:\test14.png", temp.Colors);
-            Utils.SaveColorText(@"D:\test3.txt", temp.Data);
+            Utils.SaveColorText(@"D:\test31.txt", temp.Colors);
+            Utils.SaveColorText(@"D:\test30.txt", temp.Data);
             var b = System.IO.File.CreateText(@"D:\\test4.txt");
             b.WriteLine(Utils.ToString(temp.GeoJson));
             b.Close();

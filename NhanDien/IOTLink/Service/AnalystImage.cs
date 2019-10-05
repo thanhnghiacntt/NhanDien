@@ -42,6 +42,11 @@ namespace NhanDien.IOTLink.Service
         public GeoJson GeoJson { get; private set; }
 
         /// <summary>
+        /// Dictionary
+        /// </summary>
+        public Dictionary<string, PointPixcel> Dic { get; set; }
+
+        /// <summary>
         /// Phân tích hình
         /// </summary>
         /// <param name="colors"></param>
@@ -50,7 +55,7 @@ namespace NhanDien.IOTLink.Service
             Colors = colors;
             Bounds = new Bounds(x, y, z);
             SetValue();
-            UpdateGeoJson();
+            SetColorWhenDuplicate();
         }
 
         /// <summary>
@@ -63,7 +68,9 @@ namespace NhanDien.IOTLink.Service
             Colors = colors;
             Bounds = new Bounds(box);
             SetValue();
-            UpdateGeoJson();
+            SetColorWhenDuplicate();
+            var temp = new FindWay(Image, Bounds);
+            GeoJson = temp.FindGeoJson();
         }
 
         /// <summary>
@@ -117,11 +124,11 @@ namespace NhanDien.IOTLink.Service
         /// <summary>
         /// Update geojson
         /// </summary>
-        private void UpdateGeoJson()
+        private void SetColorWhenDuplicate()
         {
             var w = Colors.GetLength(0);
             var h = Colors.GetLength(1);
-            var hash = new HashSet<string>();
+            Dic = new Dictionary<string, PointPixcel>();
             for (int i = 0; i < w; i++)
             {
                 for (int j = 0; j < h; j++)
@@ -130,20 +137,34 @@ namespace NhanDien.IOTLink.Service
                     {
                         var location = Utils.PixcelToLocation(i, j, w, h, Bounds);
                         var str = location.Lat + "," + location.Lng;
-                        if (!hash.Contains(str))
+                        var temp = i + "|" + j;
+                        var point = new PointPixcel
                         {
-                            hash.Add(str);
-                            var temp = new List<double>
-                            {
-                                location.Lng,
-                                location.Lat
-                            };
+                            X = i,
+                            Y = j,
+                            Count = Utils.Count(i, j, w, h, Image),
+                            Location = location
+                        };
+                        if (!Dic.ContainsKey(str))
+                        {
+                            Dic.Add(str, point);
                         }
                         else
                         {
-                            Image[i, j] = false;
-                            Colors[i, j] = Color.White;
-                            Data[i, j, 0] = 0;
+                            var old = Dic[str];
+                            var count = Utils.Count(i, j, w, h, Image);
+                            if (old.Count > count)
+                            {
+                                Image[old.X, old.Y] = false;
+                                Colors[old.X, old.Y] = Color.White;
+                                Data[old.X, old.Y, 0] = 0;
+                            }
+                            else
+                            {
+                                Image[i, j] = false;
+                                Colors[i, j] = Color.White;
+                                Data[i, j, 0] = 0;
+                            }
                             System.Console.WriteLine("exist " + str);
                         }
                     }
