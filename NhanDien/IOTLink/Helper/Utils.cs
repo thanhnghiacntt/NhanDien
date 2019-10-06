@@ -79,6 +79,10 @@ namespace NhanDien.IOTLink.Helper
                 var str = "";
                 for (int j = 0; j < w; j++)
                 {
+                    if (j == 164 && i == 21)
+                    {
+                        Console.WriteLine("Ok");
+                    }
                     if (images[j,i])
                     {
                         str += "+";
@@ -86,6 +90,45 @@ namespace NhanDien.IOTLink.Helper
                     else
                     {
                         str += "-";
+                    }
+                }
+                list.Add(str);
+            }
+            File.WriteAllLines(filePath, list);
+        }
+
+        /// <summary>
+        /// Save bitmap
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <param name="images"></param>
+        public static void SaveColorCSV(string filePath, bool[,] images)
+        {
+            var list = new List<string>();
+            var w = images.GetLength(0);
+            var h = images.GetLength(1);
+            var str = "";
+            for (int i = 0; i < w; i++)
+            {
+                str += i + ",";
+            }
+            list.Add(str);
+            for (int i = 0; i < h; i++)
+            {
+                str = "";
+                for (int j = 0; j < w; j++)
+                {
+                    if (j == 164 && i == 21)
+                    {
+                        Console.WriteLine("Ok");
+                    }
+                    if (images[j, i])
+                    {
+                        str += "+,";
+                    }
+                    else
+                    {
+                        str += "-,";
                     }
                 }
                 list.Add(str);
@@ -393,7 +436,36 @@ namespace NhanDien.IOTLink.Helper
             {
                 for (int m = j - 1; m <= j + 1; m++)
                 {
-                    if (IsTruePoint(i, j, w, h, image))
+                    if (IsTruePoint(l, m, w, h, image))
+                    {
+                        /// Tránh vị trí trung tâm
+                        if (m != j || l != i)
+                        {
+                            count++;
+                        }
+                    }
+                }
+            }
+            return count;
+        }
+
+        /// <summary>
+        /// Đếm tại vị trí này xung quanh có bao nhiêu phần tử
+        /// </summary>
+        /// <param name="i"></param>
+        /// <param name="j"></param>
+        /// <param name="w"></param>
+        /// <param name="h"></param>
+        /// <param name="image"></param>
+        /// <returns></returns>
+        public static int Count(int i, int j, int w, int h, int[,] image, int value = 1)
+        {
+            var count = 0;
+            for (int l = i - 1; l <= i + 1; l++)
+            {
+                for (int m = j - 1; m <= j + 1; m++)
+                {
+                    if (IsTruePoint(l, m, w, h, image, value))
                     {
                         /// Tránh vị trí trung tâm
                         if (m != j || l != i)
@@ -421,6 +493,25 @@ namespace NhanDien.IOTLink.Helper
             if (i >= 0 && j >= 0 && i < w && j < h)
             {
                 return image[i, j];
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Tại vị trí này phải phần tử true hay không
+        /// </summary>
+        /// <param name="i"></param>
+        /// <param name="j"></param>
+        /// <param name="w"></param>
+        /// <param name="h"></param>
+        /// <param name="image"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static bool IsTruePoint(int i, int j, int w, int h, int[,] image, int value = 1)
+        {
+            if (i >= 0 && j >= 0 && i < w && j < h)
+            {
+                return image[i, j] == value;
             }
             return false;
         }
@@ -466,6 +557,53 @@ namespace NhanDien.IOTLink.Helper
                 hash.Add(Direction.BottomLeft);
             }
             if (IsTruePoint(i + 1, j + 1, w, h, image))
+            {
+                hash.Add(Direction.BottomRight);
+            }
+            return hash;
+        }
+
+        /// <summary>
+        /// Find direction
+        /// </summary>
+        /// <param name="i"></param>
+        /// <param name="j"></param>
+        /// <param name="w"></param>
+        /// <param name="h"></param>
+        /// <param name="image"></param>
+        /// <returns></returns>
+        public static HashSet<Direction> FindDirection(int i, int j, int w, int h, int[,] image, int value= 1)
+        {
+            HashSet<Direction> hash = new HashSet<Direction>();
+            if (IsTruePoint(i, j - 1, w, h, image, value))
+            {
+                hash.Add(Direction.Top);
+            }
+            if (IsTruePoint(i - 1, j, w, h, image, value))
+            {
+                hash.Add(Direction.Left);
+            }
+            if (IsTruePoint(i, j + 1, w, h, image, value))
+            {
+                hash.Add(Direction.Bottom);
+            }
+            if (IsTruePoint(i + 1, j, w, h, image, value))
+            {
+                hash.Add(Direction.Right);
+            }
+            if (IsTruePoint(i - 1, j - 1, w, h, image, value))
+            {
+                hash.Add(Direction.TopLeft);
+            }
+            if (IsTruePoint(i + 1, j - 1, w, h, image, value))
+            {
+                hash.Add(Direction.TopRight);
+            }
+            if (IsTruePoint(i - 1, j + 1, w, h, image, value))
+            {
+                hash.Add(Direction.BottomLeft);
+            }
+            if (IsTruePoint(i + 1, j + 1, w, h, image, value))
             {
                 hash.Add(Direction.BottomRight);
             }

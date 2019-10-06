@@ -42,11 +42,6 @@ namespace NhanDien.IOTLink.Service
         public GeoJson GeoJson { get; private set; }
 
         /// <summary>
-        /// Dictionary
-        /// </summary>
-        public Dictionary<string, PointPixcel> Dic { get; set; }
-
-        /// <summary>
         /// Phân tích hình
         /// </summary>
         /// <param name="colors"></param>
@@ -103,6 +98,10 @@ namespace NhanDien.IOTLink.Service
             {
                 ZhangSuen.ZhangSuenThinning(tempData);
             }
+            MedianFilter.CorrosiveHit(tempData);
+            MedianFilter.CorrosiveHit(tempData);
+            MedianFilter.CorrosiveHit(tempData);
+            MedianFilter.CorrosiveHit(tempData);
             for (int i = 0; i < w; i++)
             {
                 for (int j = 0; j < h; j++)
@@ -128,7 +127,7 @@ namespace NhanDien.IOTLink.Service
         {
             var w = Colors.GetLength(0);
             var h = Colors.GetLength(1);
-            Dic = new Dictionary<string, PointPixcel>();
+            var dic = new Dictionary<string, PointPixcel>();
             for (int i = 0; i < w; i++)
             {
                 for (int j = 0; j < h; j++)
@@ -137,7 +136,6 @@ namespace NhanDien.IOTLink.Service
                     {
                         var location = Utils.PixcelToLocation(i, j, w, h, Bounds);
                         var str = location.Lat + "," + location.Lng;
-                        var temp = i + "|" + j;
                         var point = new PointPixcel
                         {
                             X = i,
@@ -145,13 +143,13 @@ namespace NhanDien.IOTLink.Service
                             Count = Utils.Count(i, j, w, h, Image),
                             Location = location
                         };
-                        if (!Dic.ContainsKey(str))
+                        if (!dic.ContainsKey(str))
                         {
-                            Dic.Add(str, point);
+                            dic.Add(str, point);
                         }
                         else
                         {
-                            var old = Dic[str];
+                            var old = dic[str];
                             var count = Utils.Count(i, j, w, h, Image);
                             if (old.Count > count)
                             {

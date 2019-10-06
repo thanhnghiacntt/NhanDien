@@ -13,7 +13,7 @@ namespace NhanDien.IOTLink.Helper
         /// <summary>
         /// Image
         /// </summary>
-        private bool[,] image;
+        private int[,] image;
 
         /// <summary>
         /// Hash set content node
@@ -32,12 +32,13 @@ namespace NhanDien.IOTLink.Helper
         /// <param name="bounds"></param>
         public FindWay(bool[,] image, Bounds bounds)
         {
-            this.image = (bool[,])image.Clone();
+            this.image = ImageToByte(image);
             this.bounds = bounds;
             hash = new HashSet<string>();
             Utils.SaveColorText(@"D:/test100.txt", image);
-        }
 
+            Utils.SaveColorCSV(@"D:/test100.csv", image);
+        }
 
         /// <summary>
         /// Update geojson
@@ -65,9 +66,13 @@ namespace NhanDien.IOTLink.Helper
             {
                 for (int j = 0; j < h; j++)
                 {
-                    if (image[i, j])
+                    if (image[i, j] == 1)
                     {
-                        features.Add(FindFeature(i, j));
+                        var feature = FindFeature(i, j);
+                        if (!feature.Geometry.Type.Equals("Point"))
+                        {
+                            features.Add(feature);
+                        }
                     }
                 }
             }
@@ -133,64 +138,114 @@ namespace NhanDien.IOTLink.Helper
             var prex = Direction.Center;
             while (true)
             {
+                var temp = Utils.PixcelToLocation(m, n, w, h, bounds);
+               
                 m = i;
                 n = j;
                 var isExist = false;
-                var count = Utils.Count(i, j, w, h, image);
+                temp = Utils.PixcelToLocation(m, n, w, h, bounds);
+                if (temp.Lng == 108.21328 && temp.Lat == 16.06803)
+                {
+                    Console.WriteLine(temp);
+                }
+                var count = Utils.Count(i, j, w, h, image, 1);
                 if (count == 0)
                 {
-                    image[m, n] = false;
-                    var temp = Utils.PixcelToLocation(m, n, w, h, bounds);
+                    image[m, n] = 0;
                     rs.Add(temp);
-                    break;
+                    count = Utils.Count(i, j, w, h, image, -1);
+                    if (count == 1)
+                    {
+                        var directions = Utils.FindDirection(i, j, w, h, image, -1);
+                        prex = directions.FirstOrDefault();
+                        if (Utils.IsTruePoint(i, j + 1, w, h, image, -1))
+                        {
+                            j++;
+                        }
+                        else if (Utils.IsTruePoint(i, j - 1, w, h, image, -1))
+                        {
+                            j--;
+                        }
+                        else if (Utils.IsTruePoint(i + 1, j, w, h, image, -1))
+                        {
+                            i++;
+                        }
+                        else if (Utils.IsTruePoint(i - 1, j, w, h, image, -1))
+                        {
+                            i--;
+                        }
+                        else if (Utils.IsTruePoint(i + 1, j + 1, w, h, image, -1))
+                        {
+                            i++;
+                            j++;
+                        }
+                        else if (Utils.IsTruePoint(i + 1, j - 1, w, h, image, -1))
+                        {
+                            i++;
+                            j--;
+                        }
+                        else if (Utils.IsTruePoint(i - 1, j + 1, w, h, image, -1))
+                        {
+                            i--;
+                            j++;
+                        }
+                        else if (Utils.IsTruePoint(i - 1, j - 1, w, h, image, -1))
+                        {
+                            i--;
+                            j--;
+                        }
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
                 else if (count == 1)
                 {
-                    image[m, n] = false;
-                    var temp = Utils.PixcelToLocation(m, n, w, h, bounds);
+                    image[m, n] = 0;
                     rs.Add(temp);
-                    if (Utils.IsTruePoint(i, j + 1, w, h, image))
-                    {
-                        j++;
-                    }
-                    if (Utils.IsTruePoint(i, j - 1, w, h, image))
-                    {
-                        j--;
-                    }
-                    if (Utils.IsTruePoint(i + 1, j, w, h, image))
-                    {
-                        i++;
-                    }
-                    if (Utils.IsTruePoint(i - 1, j, w, h, image))
-                    {
-                        i--;
-                    }
-                    if (Utils.IsTruePoint(i + 1, j + 1, w, h, image))
-                    {
-                        i++;
-                        j++;
-                    }
-                    if (Utils.IsTruePoint(i + 1, j - 1, w, h, image))
-                    {
-                        i++;
-                        j--;
-                    }
-                    if (Utils.IsTruePoint(i - 1, j + 1, w, h, image))
-                    {
-                        i--;
-                        j++;
-                    }
-                    if (Utils.IsTruePoint(i - 1, j - 1, w, h, image))
-                    {
-                        i--;
-                        j--;
-                    }
-                    var directions = Utils.FindDirection(i, j, w, h, image);
+                    var directions = Utils.FindDirection(i, j, w, h, image, 1);
                     prex = directions.FirstOrDefault();
+                    if (Utils.IsTruePoint(i, j + 1, w, h, image, 1))
+                    {
+                        j++;
+                    }
+                    else if (Utils.IsTruePoint(i, j - 1, w, h, image, 1))
+                    {
+                        j--;
+                    }
+                    else if (Utils.IsTruePoint(i + 1, j, w, h, image, 1))
+                    {
+                        i++;
+                    }
+                    else if (Utils.IsTruePoint(i - 1, j, w, h, image, 1))
+                    {
+                        i--;
+                    }
+                    else if (Utils.IsTruePoint(i + 1, j + 1, w, h, image, 1))
+                    {
+                        i++;
+                        j++;
+                    }
+                    else if (Utils.IsTruePoint(i + 1, j - 1, w, h, image, 1))
+                    {
+                        i++;
+                        j--;
+                    }
+                    else if (Utils.IsTruePoint(i - 1, j + 1, w, h, image, 1))
+                    {
+                        i--;
+                        j++;
+                    }
+                    else if (Utils.IsTruePoint(i - 1, j - 1, w, h, image, 1))
+                    {
+                        i--;
+                        j--;
+                    }
                 }
                 else
                 {
-                    var directions = Utils.FindDirection(i, j, w, h, image);
+                    var directions = Utils.FindDirection(i, j, w, h, image, 1);
                     Location locaion = Utils.PixcelToLocation(i, j, w, h, bounds);
                     switch (prex)
                     {
@@ -429,8 +484,7 @@ namespace NhanDien.IOTLink.Helper
                     }
                     else
                     {
-                        image[m, n] = false;
-                        var temp = Utils.PixcelToLocation(m, n, w, h, bounds);
+                        image[m, n] = -1;
                         rs.Add(temp);
                     }
                 }
@@ -491,5 +545,26 @@ namespace NhanDien.IOTLink.Helper
             }
             return false;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="image"></param>
+        /// <returns></returns>
+        private int[,] ImageToByte(bool[,] image)
+        {
+            var w = image.GetLength(0);
+            var h = image.GetLength(1);
+            var rs = new int[w, h];
+            for (int i = 0; i < w; i++)
+            {
+                for (int j = 0; j < h; j++)
+                {
+                    rs[i, j] = image[i, j] ? 1 : 0;
+                }
+            }
+            return rs;
+        }
+
     }
 }
