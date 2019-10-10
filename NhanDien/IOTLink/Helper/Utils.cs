@@ -24,6 +24,17 @@ namespace NhanDien.IOTLink.Helper
         }
 
         /// <summary>
+        /// File image to color
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <returns></returns>
+        public static Color[,] GetColorsImage(Stream filePath)
+        {
+            Bitmap bmp = new Bitmap(filePath);
+            return BitmapToColors(bmp);
+        }
+
+        /// <summary>
         /// Save bitmap
         /// </summary>
         /// <param name="filePath"></param>
@@ -391,7 +402,7 @@ namespace NhanDien.IOTLink.Helper
             double px = i / (w*1.0);
             double py = j / (h * 1.0);
             var lng = (px * (bounds.MaxLng - bounds.MinLng)) + bounds.MinLng;
-            var lat = (py * (bounds.MinLat - bounds.MaxLat)) + bounds.MaxLat;
+            var lat = bounds.MaxLat - (py * (bounds.MaxLat - bounds.MinLat));
             int digits = 5;
             var location = new Location
             {

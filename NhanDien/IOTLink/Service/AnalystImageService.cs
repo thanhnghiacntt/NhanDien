@@ -9,7 +9,7 @@ namespace NhanDien.IOTLink.Service
     /// <summary>
     /// Phân tích hình ảnh
     /// </summary>
-    public class AnalystImage
+    public class AnalystImageService
     {
         /// <summary>
         /// Danh sách màu của hình
@@ -45,12 +45,12 @@ namespace NhanDien.IOTLink.Service
         /// Phân tích hình
         /// </summary>
         /// <param name="colors"></param>
-        public AnalystImage(Color[,] colors, int z, int x, int y)
+        public AnalystImageService(Color[,] colors, int z, int x, int y)
         {
             Colors = colors;
             Bounds = new Bounds(x, y, z);
             SetValue();
-            SetColorWhenDuplicate();
+            //SetColorWhenDuplicate();
         }
 
         /// <summary>
@@ -58,12 +58,27 @@ namespace NhanDien.IOTLink.Service
         /// </summary>
         /// <param name="colors"></param>
         /// <param name="box"></param>
-        public AnalystImage(Color[,] colors, string box)
+        public AnalystImageService(Color[,] colors, string box, int zoom)
         {
             Colors = colors;
-            Bounds = new Bounds(box);
+            Bounds = new Bounds(box, zoom);
             SetValue();
-            SetColorWhenDuplicate();
+            //SetColorWhenDuplicate();
+            var temp = new FindWay(Image, Bounds);
+            GeoJson = temp.FindGeoJson();
+        }
+
+        /// <summary>
+        /// Phân tích hình
+        /// </summary>
+        /// <param name="colors"></param>
+        /// <param name="bounds"></param>
+        public AnalystImageService(Color[,] colors, Bounds bounds)
+        {
+            Colors = colors;
+            Bounds = bounds;
+            SetValue();
+            //SetColorWhenDuplicate();
             var temp = new FindWay(Image, Bounds);
             GeoJson = temp.FindGeoJson();
         }
@@ -98,9 +113,6 @@ namespace NhanDien.IOTLink.Service
             {
                 ZhangSuen.ZhangSuenThinning(tempData);
             }
-            MedianFilter.CorrosiveHit(tempData);
-            MedianFilter.CorrosiveHit(tempData);
-            MedianFilter.CorrosiveHit(tempData);
             MedianFilter.CorrosiveHit(tempData);
             for (int i = 0; i < w; i++)
             {

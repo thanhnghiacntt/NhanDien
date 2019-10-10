@@ -1,6 +1,7 @@
 ﻿using NhanDien.IOTLink.Process.Model;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 
 namespace NhanDien.IOTLink.Helper
@@ -109,6 +110,7 @@ namespace NhanDien.IOTLink.Helper
                     temp[0].Lat
                 };
             }
+            var color = RandomColor();
             Feature feature = new Feature()
             {
                 Type = "Feature",
@@ -118,10 +120,52 @@ namespace NhanDien.IOTLink.Helper
                     Coordinates = coordinates
                 },
                 Properties = new Dictionary<string, object>()
+                {
+                    {"stroke", HexConverter(color)}
+                }
             };
             return feature;
         }
 
+        private string HexConverter(Color c)
+        {
+            return "#" + c.R.ToString("X2") + c.G.ToString("X2") + c.B.ToString("X2");
+        }
+
+        /// <summary>
+        /// Random color
+        /// </summary>
+        /// <returns></returns>
+        private Color RandomColor()
+        {
+            Random r = new Random();
+            int random = r.Next(0, 10);
+            switch (random)
+            {
+                case 0:
+                    return Color.Red;
+                case 1:
+                    return Color.Black;
+                case 2:
+                    return Color.Blue;
+                case 3:
+                    return Color.AliceBlue;
+                case 4:
+                    return Color.Yellow;
+                case 5:
+                    return Color.Gray;
+                case 6:
+                    return Color.Green;
+                case 7:
+                    return Color.HotPink;
+                case 8:
+                    return Color.LightBlue;
+                case 9:
+                    return Color.MintCream;
+                default:
+                    return Color.White;
+            }
+        }
         /// <summary>
         /// Find list location
         /// </summary>
@@ -138,21 +182,16 @@ namespace NhanDien.IOTLink.Helper
             var prex = Direction.Center;
             while (true)
             {
-                var temp = Utils.PixcelToLocation(m, n, w, h, bounds);
-               
                 m = i;
                 n = j;
+                var temp = Utils.PixcelToLocation(m, n, w, h, bounds);
                 var isExist = false;
-                temp = Utils.PixcelToLocation(m, n, w, h, bounds);
-                if (temp.Lng == 108.21328 && temp.Lat == 16.06803)
-                {
-                    Console.WriteLine(temp);
-                }
                 var count = Utils.Count(i, j, w, h, image, 1);
                 if (count == 0)
                 {
                     image[m, n] = 0;
                     rs.Add(temp);
+                    /*
                     count = Utils.Count(i, j, w, h, image, -1);
                     if (count == 1)
                     {
@@ -198,7 +237,8 @@ namespace NhanDien.IOTLink.Helper
                     else
                     {
                         break;
-                    }
+                    }*/
+                    break;
                 }
                 else if (count == 1)
                 {
@@ -484,7 +524,7 @@ namespace NhanDien.IOTLink.Helper
                     }
                     else
                     {
-                        image[m, n] = -1;
+                        image[m, n] = 0;
                         rs.Add(temp);
                     }
                 }
@@ -499,26 +539,51 @@ namespace NhanDien.IOTLink.Helper
         /// <returns></returns>
         private IList<Location> ProjectWay(IList<Location> temp)
         {
-            Location a = temp[0];
-            Location b = null;
-            Location c = null;
-            var list = new List<Location>
-            {
-                a
-            };
+            var list = new List<Location>();
             if (temp.Count > 3)
             {
-                for (int i = 2; i < temp.Count; i++)
+                var f = 0;
+                var l = temp.Count - 1;
+                var a = f;
+                var b = l;
+                var max = 0;
+                while(f != l)
                 {
-                    b = temp[i - 1];
-                    c = temp[i];
-                    if (!IsWay(a,b,c))
+                    var count = 0;
+                    for (var i = f + 1; i < l - 1; i++)
                     {
-                        list.Add(b);
-                        a = b;
+                        if (IsWay(temp[f], temp[i], temp[l]))
+                        {
+                            count++;
+                        }
+                    }
+                    if (count > max)
+                    {
+                        max = count;
+                        a = f;
+                        b = l;
+                    }
+                    if (l - f < max)
+                    {
+                        break;
+                    }
+                    l--;
+                }
+                for (int i = 0; i <= a; i++)
+                {
+                    list.Add(temp[i]);
+                }
+                for (var i = a + 1; i < b; i++)
+                {
+                    if (!IsWay(temp[a], temp[i], temp[b]))
+                    {
+                        list.Add(temp[i]);
                     }
                 }
-                list.Add(c);
+                for (int i = b; i < temp.Count; i++)
+                {
+                    list.Add(temp[i]);
+                }
             }
             else
             {
@@ -539,7 +604,7 @@ namespace NhanDien.IOTLink.Helper
             var ab = Math.Sqrt(Math.Pow(a.Lat - b.Lat, 2) + Math.Pow(a.Lng - b.Lng, 2));
             var bc = Math.Sqrt(Math.Pow(b.Lat - c.Lat, 2) + Math.Pow(b.Lng - c.Lng, 2));
             var ac = Math.Sqrt(Math.Pow(a.Lat - c.Lat, 2) + Math.Pow(a.Lng - c.Lng, 2));
-            if (Utils.Compare(ac, ab+bc))
+            if (Utils.Compare(ac, ab+bc, 0.000005))
             {
                 return true;
             }

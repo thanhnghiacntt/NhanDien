@@ -32,6 +32,10 @@ namespace NhanDien.IOTLink.Process.Algorithm
             }
         }
 
+        /// <summary>
+        /// Giải thuật hit xóa vằng
+        /// </summary>
+        /// <param name="data"></param>
         public static void CorrosiveHit(byte[,,] data)
         {
             byte[] temp = new byte[9];

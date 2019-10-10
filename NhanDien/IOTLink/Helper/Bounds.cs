@@ -37,16 +37,6 @@ namespace NhanDien.IOTLink.Helper
         public int Zoom { get; private set; }
 
         /// <summary>
-        /// X
-        /// </summary>
-        public int X { get; private set; }
-
-        /// <summary>
-        /// Y
-        /// </summary>
-        public int Y { get; private set; }
-
-        /// <summary>
         /// Maximum longtitude
         /// </summary>
         public double MaxLng { get; set; }
@@ -67,6 +57,16 @@ namespace NhanDien.IOTLink.Helper
         public double MinLat { get; set; }
 
         /// <summary>
+        /// X in map
+        /// </summary>
+        public Tile TileMin { get; set; }
+
+        /// <summary>
+        /// X in map
+        /// </summary>
+        public Tile TileMax { get; set; }
+
+        /// <summary>
         /// Hàm khởi tạo
         /// </summary>
         /// <param name="x"></param>
@@ -75,10 +75,10 @@ namespace NhanDien.IOTLink.Helper
         public Bounds(int x, int y, int z)
         {
             Zoom = z;
-            X = x;
-            Y = y;
-            var south = Tile2Lat(y, z);
-            var north = Tile2Lat(y + 1, z);
+            TileMin = new Tile(x, y, z);
+            TileMax = new Tile(x, y, z);
+            var south = Tile2Lat(y + 1, z);
+            var north = Tile2Lat(y, z);
             var west = Tile2Lng(x, z);
             var east = Tile2Lng(x + 1, z);
             SetMinMiddleMax(south, west, north, east);
@@ -88,14 +88,26 @@ namespace NhanDien.IOTLink.Helper
         /// Box
         /// </summary>
         /// <param name="box"></param>
-        public Bounds(string box)
+        public Bounds(string box, int zoom, bool isUpdated = true)
         {
             Box = box;
+            Zoom = zoom;
             var temp = box.Split(",");
             var south = double.Parse(temp[0]);
             var west = double.Parse(temp[1]);
             var north = double.Parse(temp[2]);
             var east = double.Parse(temp[3]);
+            Tile tileMin = new Tile(south, west, zoom);
+            Tile tileMax = new Tile(north, east, zoom);
+            if (isUpdated)
+            {
+                south = Tile2Lat(tileMin.Y + 1, zoom);
+                west = Tile2Lng(tileMin.X, zoom);
+                north = Tile2Lat(tileMax.Y, zoom);
+                east = Tile2Lng(tileMax.X + 1, zoom);
+            }
+            TileMin = new Tile(tileMin.X, tileMax.Y, zoom);
+            TileMax = new Tile(tileMax.X, tileMin.Y, zoom);
             SetMinMiddleMax(south, west, north, east);
         }
 
@@ -129,6 +141,7 @@ namespace NhanDien.IOTLink.Helper
             MinLng = west;
             MaxLat = north;
             MaxLng = east;
+
         }
 
         /// <summary>
